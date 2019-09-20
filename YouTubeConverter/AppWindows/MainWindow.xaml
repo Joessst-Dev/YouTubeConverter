@@ -3,9 +3,59 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:converters="clr-namespace:YouTubeConverter.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="YouTube Converter"
+        Height="450"
+        Width="800"
+        Background="{DynamicResource MaterialDesignPaper}"
+        DataContext="{Binding MainViewModel, Source={StaticResource Locator}}"
+        FocusManager.FocusedElement="{Binding ElementName=QueryTextBox}">
+    <DockPanel>
+        <Border
+            Background="{DynamicResource PrimaryHueMidBrush}"
+            DockPanel.Dock="Top"
+            TextElement.Foreground="{DynamicResource SecondaryInverseTextBrush}">
+            <StackPanel Orientation="Vertical">
+                <!--  Query  -->
+                <materialDesign:Card Margin="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox
+                            x:Name="QueryTextBox"
+                            Grid.Column="0"
+                            Margin="6"
+                            materialDesign:HintAssist.Hint="Youtube video URL or ID"
+                            materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
+                            BorderThickness="0"
+                            FontSize="16"
+                            Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="0,6,6,6"
+                            Padding="4"
+                            Command="{Binding FetchVideoInfoCommand}"
+                            IsDefault="True"
+                            Style="{DynamicResource MaterialDesignFlatButton}">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                Kind="ArrowRight" />
+                        </Button>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!--  Progress  -->
+                <ProgressBar
+                    Background="Transparent"
+                    IsIndeterminate="{Binding Video.IsProgressIndeterminate}"
+                    Value="{Binding Video.Progress, Mode=OneWay}" />
+            </StackPanel>
+        </Border>
+    </DockPanel>
 </Window>
