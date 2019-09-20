@@ -7,8 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using YouTubeConverter.Models;
 using YoutubeExplode;
-using YoutubeExplode.Models;
-using YoutubeExplode.Models.ClosedCaptions;
 using YoutubeExplode.Models.MediaStreams;
 
 namespace YouTubeConverter.ViewModels
@@ -21,9 +19,7 @@ namespace YouTubeConverter.ViewModels
         private IEnumerable<YouTubeContainerModel> _videos;
         private string _query;
         private bool _isBusy;
-        private double _progress;
         private bool _isProgressIndeterminate;
-        private YouTubeContainerModel _video;
 
         public IEnumerable<YouTubeContainerModel> Videos
         {
@@ -31,15 +27,8 @@ namespace YouTubeConverter.ViewModels
             private set
             {
                 Set(ref _videos, value);
-                DownloadMediaCommand.RaiseCanExecuteChanged();
                 RaisePropertyChanged(() => VideosAvailable);
             }
-        }
-
-        public YouTubeContainerModel Video
-        {
-            get => _video;
-            private set => Set(ref _video, value);
         }
 
         public bool IsBusy
@@ -50,12 +39,6 @@ namespace YouTubeConverter.ViewModels
                 Set(ref _isBusy, value);
                 FetchVideoInfoCommand.RaiseCanExecuteChanged();
             }
-        }
-
-        public double Progress
-        {
-            get => _progress;
-            private set => Set(ref _progress, value);
         }
 
         public bool IsProgressIndeterminate
@@ -74,7 +57,9 @@ namespace YouTubeConverter.ViewModels
             }
         }
 
-        public bool VideosAvailable => !Videos.Select(v => v.IsDataAvailable).Any(v => v == false);
+        public bool VideosAvailable => Videos != null 
+            ? !Videos.Select(v => v.IsDataAvailable).Any(v => v == false) 
+            : false;
 
         public RelayCommand FetchVideoInfoCommand { get; }
         public RelayCommand DownloadMediaCommand { get; }
@@ -87,7 +72,10 @@ namespace YouTubeConverter.ViewModels
             //Commands
             FetchVideoInfoCommand = new RelayCommand(FetchVideoInfo, 
                 () => !IsBusy && !string.IsNullOrWhiteSpace(Query));
-            DownloadMediaCommand = new RelayCommand(DownloadMedia, () => VideosAvailable && !IsBusy);
+            DownloadMediaCommand = new RelayCommand(DownloadMedia, 
+                () => !IsBusy);
+            RemoveVideoCommand = new RelayCommand<YouTubeContainerModel>(RemoveVideo,
+                _ => !IsBusy);
         }
 
         private string PromptSaveLocationDialog()
@@ -95,7 +83,7 @@ namespace YouTubeConverter.ViewModels
             var dialog = new System.Windows.Forms.FolderBrowserDialog()
             {
                 Description = "Choose the location where your videos should be saved",
-                RootFolder = Environment.SpecialFolder.MyDocuments,
+                SelectedPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
                 ShowNewFolderButton = true
             };
 
@@ -103,7 +91,7 @@ namespace YouTubeConverter.ViewModels
                 && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
                 return dialog.SelectedPath;
 
-            return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            return null;
         }
 
         private string NormalizeVideoId(string input)
@@ -121,6 +109,11 @@ namespace YouTubeConverter.ViewModels
             return fileName;
         }
 
+        private void RemoveVideo(YouTubeContainerModel video)
+        {
+            Videos = Videos.Where(v => v != video);
+        }
+
         private async void FetchVideoInfo()
         {
             try
@@ -128,79 +121,35 @@ namespace YouTubeConverter.ViewModels
                 IsBusy = true;
                 IsProgressIndeterminate = true;
 
-                Video video = null;
-                Channel channel = null;
-                MediaStreamInfoSet mediaStreamInfos = null;
-                IReadOnlyList<ClosedCaptionTrackInfo> closedCaptionTrackInfos = null;
+                YouTubeContainerModel video = new YouTubeContainerModel();
 
                 var videoId = NormalizeVideoId(Query);
 
                 IEnumerable<Task> tasks = new List<Task>()
                 {
                     _client.GetVideoAsync(videoId)
-                        .ContinueWith(t => video = t.Result),
+                        .ContinueWith(t => video.Video = t.Result),
                     _client.GetVideoAuthorChannelAsync(videoId)
-                        .ContinueWith(t => channel = t.Result),
+                        .ContinueWith(t => video.Channel = t.Result),
                     _client.GetVideoMediaStreamInfosAsync(videoId)
-                        .ContinueWith(t => mediaStreamInfos = t.Result),
+                        .ContinueWith(t => video.MediaStreamInfos = t.Result),
                     _client.GetVideoClosedCaptionTrackInfosAsync(videoId)
-                        .ContinueWith(t => closedCaptionTrackInfos = t.Result)
+                        .ContinueWith(t => video.ClosedCaptionTrackInfos = t.Result)
                 };
 
                 await Task.WhenAll(tasks);
 
-                Video = new YouTubeContainerModel
-                {
-                    Video = video,
-                    Channel = channel,
-                    MediaStreamInfos = mediaStreamInfos,
-                    ClosedCaptionTrackInfos = closedCaptionTrackInfos
-                };
-
                 Videos = Videos != null 
-                    ? Videos.Concat(new List<YouTubeContainerModel> { Video }) 
-                    : new List<YouTubeContainerModel> { Video};
+                    ? Videos.Concat(new List<YouTubeContainerModel> { video }) 
+                    : new List<YouTubeContainerModel> { video };
             }
             finally
             {
                 IsBusy = false;
                 IsProgressIndeterminate = false;
+                Query = string.Empty;
             }
         }
-
-        //private async void DownloadMedia()
-        //{
-        //    string folderPath = PromptSaveLocationDialog();
-        //    IList<Task> tasks = new List<Task>();
-
-        //    foreach (var video in Videos)
-        //    {
-        //        video.IsBusy = true;
-        //        video.Progress = 0;
-
-        //        var streamInfo = video.MediaStreamInfos.Muxed.WithHighestVideoQuality();
-
-        //        var fileExt = streamInfo.Container.GetFileExtension();
-
-        //        Progress<double> progressHandler = new Progress<double>(p => video.Progress = p);
-
-        //        tasks.Add(
-        //            _client.DownloadMediaStreamAsync(
-        //                streamInfo,
-        //                Path.Combine(
-        //                    folderPath,
-        //                    SanitizeFileName($"{video.Video.Title}.{fileExt}")
-        //                )
-        //            ).ContinueWith(_ =>
-        //            {
-        //                video.IsBusy = false;
-        //                video.Progress = 0;
-        //            })
-        //        );
-        //    }
-
-        //    await Task.WhenAll(tasks);
-        //}
 
         private async void DownloadMedia()
         {
@@ -210,15 +159,40 @@ namespace YouTubeConverter.ViewModels
 
                 string folderPath = PromptSaveLocationDialog();
 
+                if (folderPath is null)
+                    return;
+
+                IList<Task> tasks = new List<Task>();
+
                 foreach (var video in Videos)
                 {
-                    Progress = 0;
+                    video.Progress = 0;
+
+                    var streamInfo = video.MediaStreamInfos.Muxed.WithHighestVideoQuality();
+
+                    var fileExt = streamInfo.Container.GetFileExtension();
+
+                    Progress<double> progressHandler = new Progress<double>(p => video.Progress = p);
+
+                    tasks.Add(
+                        _client.DownloadMediaStreamAsync(
+                            streamInfo,
+                            Path.Combine(
+                                folderPath,
+                                SanitizeFileName($"{video.Video.Title}.{fileExt}")
+                            ),
+                            progressHandler
+                        ).ContinueWith(_ => {
+                            video.Progress = 0;
+                        })
+                    );
+
+                    await Task.WhenAll(tasks);
                 }
             }
             finally
             {
                 IsBusy = false;
-                Progress = 0;
             }
         }
     }

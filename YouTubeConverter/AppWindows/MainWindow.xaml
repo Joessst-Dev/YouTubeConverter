@@ -7,11 +7,15 @@
         xmlns:converters="clr-namespace:YouTubeConverter.Converters"
         mc:Ignorable="d"
         Title="YouTube Converter"
-        Height="450"
-        Width="800"
+        Height="400"
+        Width="700"
+        MinWidth="700"
+        MaxWidth="700"
         Background="{DynamicResource MaterialDesignPaper}"
         DataContext="{Binding MainViewModel, Source={StaticResource Locator}}"
-        FocusManager.FocusedElement="{Binding ElementName=QueryTextBox}">
+        FocusManager.FocusedElement="{Binding ElementName=QueryTextBox}"
+        Style="{DynamicResource MaterialDesignRoot}"
+        WindowStartupLocation="CenterScreen">
     <DockPanel>
         <Border
             Background="{DynamicResource PrimaryHueMidBrush}"
@@ -19,7 +23,7 @@
             TextElement.Foreground="{DynamicResource SecondaryInverseTextBrush}">
             <StackPanel Orientation="Vertical">
                 <!--  Query  -->
-                <materialDesign:Card Margin="12">
+                <materialDesign:Card Margin="12 12 12 0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -51,11 +55,198 @@
                 </materialDesign:Card>
 
                 <!--  Progress  -->
-                <ProgressBar
+                <ProgressBar Margin="12 0 12 12"
                     Background="Transparent"
-                    IsIndeterminate="{Binding Video.IsProgressIndeterminate}"
-                    Value="{Binding Video.Progress, Mode=OneWay}" />
+                    IsIndeterminate="{Binding IsProgressIndeterminate}"/>
             </StackPanel>
         </Border>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <!-- Selected Videos -->
+            <ScrollViewer
+                Grid.Row="0"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="{Binding VideosAvailable, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}">
+                <StackPanel Orientation="Vertical" Margin="8">
+                    <ItemsControl ItemsSource="{Binding Videos}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Vertical">
+                                    <materialDesign:Card Margin="8,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Grid HorizontalAlignment="Left" Background="Black">
+                                                <Image Width="100" Height="100" Source="{Binding Video.Thumbnails.MediumResUrl}" />
+
+                                                <TextBlock
+                                                FontSize="11"
+                                                Margin="2"
+                                                Padding="2"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom"
+                                                Background="Black"
+                                                Foreground="{DynamicResource SecondaryInverseTextBrush}"
+                                                Text="{Binding Video.Duration}" />
+                                            </Grid>
+                                            <StackPanel Orientation="Vertical" Margin="5" Width="480">
+                                                <TextBlock
+                                            Margin="6"
+                                            FontSize="16"
+                                            VerticalAlignment="Top"
+                                            Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                                            Text="{Binding Video.Title, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis" />
+
+                                                <DockPanel HorizontalAlignment="Stretch">
+                                                    <!--  Author image  -->
+                                                    <Image
+                                                Width="50"
+                                                Height="50"
+                                                Margin="6,6,0,6"
+                                                VerticalAlignment="Top"
+                                                DockPanel.Dock="Left"
+                                                Source="{Binding Channel.LogoUrl}" />
+
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                            <RowDefinition Height="Auto" />
+                                                        </Grid.RowDefinitions>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="3*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <!--  Author name  -->
+                                                        <TextBlock
+                                                    Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    Margin="6,6,6,4"
+                                                    VerticalAlignment="Bottom"
+                                                    FontSize="14"
+                                                    Foreground="{DynamicResource PrimaryTextBrush}"
+                                                    Text="{Binding Channel.Title, Mode=OneWay}" />
+
+                                                        <!--  Views  -->
+                                                        <TextBlock
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Margin="6,6,6,4"
+                                                    HorizontalAlignment="Right"
+                                                    FontSize="14">
+                                                    <Run Text="{Binding Video.Statistics.ViewCount, StringFormat=\{0:N0\}, Mode=OneWay}" />
+                                                    <Run Text="views" />
+                                                        </TextBlock>
+
+                                                        <!--  Divider  -->
+                                                        <Border
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    Height="2"
+                                                    Margin="6,0,0,0"
+                                                    HorizontalAlignment="Stretch"
+                                                    Background="{DynamicResource MaterialDesignDivider}" />
+
+                                                        <!--  Rating bar  -->
+                                                        <ProgressBar
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    MinWidth="150"
+                                                    Margin="0,0,6,0"
+                                                    HorizontalAlignment="Stretch"
+                                                    Maximum="5"
+                                                    Minimum="1"
+                                                    Value="{Binding Video.Statistics.AverageRating, Mode=OneWay}" />
+
+                                                        <!--  Upload date  -->
+                                                        <TextBlock
+                                                    Grid.Row="2"
+                                                    Grid.Column="0"
+                                                    Margin="6,4,6,6"
+                                                    Text="{Binding Video.UploadDate, StringFormat=\{0:MMM d\, yyyy\}}" />
+
+                                                        <!--  Likes and dislikes  -->
+                                                        <StackPanel
+                                                    Grid.Row="2"
+                                                    Grid.Column="1"
+                                                    Margin="6,4,6,6"
+                                                    HorizontalAlignment="Right"
+                                                    Orientation="Horizontal">
+
+                                                            <materialDesign:PackIcon
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        Kind="ThumbUp" />
+
+                                                            <TextBlock
+                                                        Margin="3,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Text="{Binding Video.Statistics.LikeCount, StringFormat=\{0:N0\}}" />
+
+                                                            <materialDesign:PackIcon
+                                                        Margin="8,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        Kind="ThumbDown" />
+
+                                                            <TextBlock
+                                                        Margin="3,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Text="{Binding Video.Statistics.DislikeCount, StringFormat=\{0:N0\}}" />
+
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </DockPanel>
+                                            </StackPanel>
+
+                                            <Button
+                                        Margin="10"
+                                        Padding="4"
+                                        Command="{Binding MainViewModel.RemoveVideoCommand, Source={StaticResource Locator}}"
+                                        CommandParameter="{Binding}"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        IsDefault="True"
+                                        Style="{DynamicResource MaterialDesignFlatButton}">
+                                                <materialDesign:PackIcon
+                                            Width="24"
+                                            Height="24"
+                                            Kind="TrashCan" />
+                                            </Button>
+                                        </StackPanel>
+                                    </materialDesign:Card>
+                                    <ProgressBar Margin="8 0 8 8"
+                                    Background="Transparent"
+                                    Value="{Binding Progress, Mode=OneWay}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+            <Border
+                Grid.Row="1"
+                Margin="8"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Visibility="{Binding VideosAvailable, Converter={x:Static converters:BoolToVisibilityConverter.Instance}}">
+                <Button
+                    Width="400"
+                    Padding="4"
+                    Background="{DynamicResource PrimaryHueMidBrush}"
+                    Foreground="{DynamicResource PrimaryHueDarkBrush}"
+                    Command="{Binding DownloadMediaCommand}">
+                    <materialDesign:PackIcon
+                            Width="24"
+                            Height="24"
+                            Kind="DownloadMultiple" />
+                </Button>
+            </Border>
+        </Grid>
     </DockPanel>
 </Window>

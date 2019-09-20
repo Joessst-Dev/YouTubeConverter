@@ -16,7 +16,8 @@
             <Color x:Key="PrimaryColor">#343838</Color>
             <Color x:Key="PrimaryLightColor">#5E6262</Color>
             <Color x:Key="PrimaryDarkColor">#0D1212</Color>
-            <Color x:Key="AccentColor">#F9A825</Color>
+            <Color x:Key="AccentColor">#fc291e</Color>
+            <Color x:Key="SecondaryAccentColor">#F9A825</Color>
             <Color x:Key="TextColor">#000000</Color>
             <Color x:Key="InverseTextColor">#FFFFFF</Color>
 
@@ -27,6 +28,7 @@
             <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="{DynamicResource PrimaryDarkColor}" />
             <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="{DynamicResource InverseTextColor}" />
             <SolidColorBrush x:Key="SecondaryAccentBrush" Color="{DynamicResource AccentColor}" />
+            <SolidColorBrush x:Key="ThirdAccentBrush" Color="{DynamicResource SecondaryAccentColor}" />
             <SolidColorBrush x:Key="SecondaryAccentForegroundBrush" Color="{DynamicResource TextColor}" />
 
             <SolidColorBrush

@@ -94,6 +94,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Converters\ArrayToStringConverter.cs" />
+    <Compile Include="Converters\BoolToStringConverter.cs" />
+    <Compile Include="Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\FileSizeToStringConverter.cs" />
     <Compile Include="Models\YouTubeContainerModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Locator.cs" />
